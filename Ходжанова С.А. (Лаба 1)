@@ -1,0 +1,101 @@
+# 1. Псевдографический флаг Швейцарии (красный фон, белый крест)
+# ---------------------------------------------------------
+def draw_swiss_flag(width=20, height=10):
+    cross_thickness = width // 5
+    cross_x = (width - cross_thickness) // 2
+    cross_y = (height - cross_thickness) // 2
+
+    for y in range(height):
+        line = ""
+        for x in range(width):
+            # Горизонтальная часть креста
+            h_cross = (cross_x <= x < cross_x + cross_thickness)
+            # Вертикальная часть креста
+            v_cross = (cross_y <= y < cross_y + cross_thickness)
+            if h_cross or v_cross:
+                line += "■" # белый квадрат (крест)
+            else:
+                line += "◆" # красный фон
+        print(line)
+
+# ---------------------------------------------------------
+# 2. Узор j (символ «бесконечность»)
+# ---------------------------------------------------------
+def draw_pattern_j(rows=5):
+    # Простой псевдографический вариант узора j (∞)
+    # Используем escape-последовательности для форматирования
+    for i in range(rows):
+        # Верхняя петля
+        if i == 0:
+            print(" ∞∞∞")
+        elif i == 1:
+            print(" ∞ ∞")
+        elif i == 2:
+            print("∞ ∞")
+        elif i == 3:
+            print(" ∞ ∞")
+        elif i == 4:
+            print(" ∞∞∞")
+
+# ---------------------------------------------------------
+# 3. График функции y = x / 3 в псевдографике
+# ---------------------------------------------------------
+def draw_graph_y_x_div_3(x_min=-9, x_max=9, step=1, height=11):
+    # Создаём сетку (список строк)
+    grid = [[" " for _ in range(x_max - x_min + 1)] for _ in range(height)]
+    zero_y = height // 2
+
+    for x in range(x_min, x_max + 1, step):
+        y_val = x / 3
+        # Масштабируем y для сетки: y_grid = zero_y - round(y_val)
+        y_grid = zero_y - round(y_val)
+        if 0 <= y_grid < height:
+            col = x - x_min
+            grid[y_grid][col] = "*"
+
+    # Рисуем оси
+    for r in range(height):
+        row_str = ""
+        for c in range(len(grid[r])):
+            if grid[r][c] != " ":
+                row_str += grid[r][c]
+            else:
+                # Ось Y
+                if c == -x_min:
+                    row_str += "|"
+                # Ось X
+                elif r == zero_y:
+                    row_str += "-"
+                else:
+                    row_str += " "
+        print(row_str)
+
+    # Подписи осей
+    x_labels = "".join(str(x) if x % 3 == 0 else " " for x in range(x_min, x_max + 1))
+    # Выровняем подписи под осью X
+    print(" " * (-x_min) + x_labels[:x_max - x_min + 1])
+
+# ---------------------------------------------------------
+# 4. Фильтрация чисел: оставить только от -3 до 3 включительно
+# ---------------------------------------------------------
+def filter_numbers(numbers):
+    return [n for n in numbers if -3 <= n <= 3]
+
+# ---------------------------------------------------------
+# Основная программа
+# ---------------------------------------------------------
+if __name__ == "__main__":
+    print("=== Флаг Швейцарии (вариант 10) ===")
+    draw_swiss_flag()
+
+    print("\n=== Узор j (бесконечность) ===")
+    draw_pattern_j()
+
+    print("\n=== График функции y = x / 3 ===")
+    draw_graph_y_x_div_3()
+
+    print("\n=== Фильтрация чисел (от -3 до 3) ===")
+    sample_data = [-10, -5, -3, -2, 0, 1, 3, 4, 7, 10]
+    filtered = filter_numbers(sample_data)
+    print(f"Исходные числа: {sample_data}")
+    print(f"Отфильтрованные: {filtered}")

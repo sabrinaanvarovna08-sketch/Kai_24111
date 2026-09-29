@@ -1,0 +1,106 @@
+import os
+import shutil
+import argparse
+import logging
+
+# 1. Настройка логирования (Совет из текста)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+
+# 2. Словарь с категориями и расширениями файлов
+# Вы можете легко добавлять новые категории и расширения
+FILE_CATEGORIES = {
+    'Images': ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.svg', '.ico', '.tiff'],
+    'Documents': ['.pdf', '.doc', '.docx', '.txt', '.xls', '.xlsx', '.ppt', '.pptx', '.csv', '.rtf'],
+    'Archives': ['.zip', '.rar', '.tar', '.gz', '.7z', '.bz2'],
+    'Audio': ['.mp3', '.wav', '.aac', '.flac', '.ogg', '.m4a'],
+    'Video': ['.mp4', '.avi', '.mkv', '.mov', '.wmv', '.flv'],
+    'Programs': ['.exe', '.msi', '.dmg', '.pkg', '.deb', '.apk'],
+    'Scripts': ['.py', '.js', '.html', '.css', '.php', '.java', '.cpp', '.sh']
+}
+
+
+def get_category(extension):
+    """Определяет категорию файла по его расширению."""
+    extension = extension.lower()
+    for category, extensions in FILE_CATEGORIES.items():
+        if extension in extensions:
+            return category
+    return 'Other'  # Если расширение не найдено, отправляем в 'Other'
+
+
+def organize_files(directory):
+    """Основная функция для сортировки файлов."""
+    if not os.path.exists(directory):
+        logging.error(f"Директория не найдена: {directory}")
+        return
+
+    logging.info(f"Начало сортировки в папке: {os.path.abspath(directory)}")
+    moved_count = 0
+
+    # Проходим по всем файлам в директории
+    for filename in os.listdir(directory):
+        file_path = os.path.join(directory, filename)
+
+        # Пропускаем папки и скрытые файлы (начинающиеся с точки)
+        if os.path.isdir(file_path) or filename.startswith('.'):
+            continue
+
+        # Не перемещаем сам скрипт
+        if os.path.abspath(file_path) == os.path.abspath(__file__):
+            continue
+
+        # Получаем расширение файла
+        _, extension = os.path.splitext(filename)
+        if not extension:
+            continue  # Пропускаем файлы без расширения
+
+        # Определяем папку назначения
+        category = get_category(extension)
+        category_dir = os.path.join(directory, category)
+
+        # Создаем папку, если её нет (os.makedirs)
+        os.makedirs(category_dir, exist_ok=True)
+
+        # Формируем путь назначения
+        destination = os.path.join(category_dir, filename)
+
+        # Перемещаем файл (shutil.move)
+        try:
+            # Проверка на дубликаты (если файл с таким именем уже есть в папке назначения)
+            if os.path.exists(destination):
+                base, ext = os.path.splitext(filename)
+                counter = 1
+                while os.path.exists(destination):
+                    new_filename = f"{base}_{counter}{ext}"
+                    destination = os.path.join(category_dir, new_filename)
+                    counter += 1
+                logging.warning(f"Файл {filename} уже существует. Переименован в {os.path.basename(destination)}")
+
+            shutil.move(file_path, destination)
+            logging.info(f"Перемещен: {filename} -> {category}/")
+            moved_count += 1
+
+        except Exception as e:
+            logging.error(f"Ошибка при перемещении {filename}: {e}")
+
+    logging.info(f"Сортировка завершена. Перемещено файлов: {moved_count}")
+
+
+if __name__ == "__main__":
+    # 3. Настройка аргументов командной строки (Совет из текста)
+    parser = argparse.ArgumentParser(description="Скрипт для автоматической сортировки файлов по папкам.")
+    parser.add_argument(
+        "directory",
+        nargs="?",
+        default=".",
+        help="Путь к папке для сортировки (по умолчанию текущая папка)"
+    )
+
+    args = parser.parse_args()
+
+    # Запуск основной функции
+    organize_files(args.directory)
